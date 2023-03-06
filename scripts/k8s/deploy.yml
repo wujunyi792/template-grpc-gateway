@@ -1,0 +1,115 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cas-group
+  namespace: juanji
+  labels:
+    app: cas-group
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cas-app
+  template:
+    metadata:
+      labels:
+        app: cas-app
+    spec:
+      containers:
+        - name: cas-container
+          image: registry.cn-hangzhou.aliyuncs.com/juanji/cas
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: juanji-cas-config
+              mountPath: /Serve/config/
+              readOnly: true
+      volumes:
+        - name: juanji-cas-config
+          configMap:
+            name: settings-cas
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cas-svc
+  namespace: juanji
+  labels:
+    app: cas-svc
+    service: cas-svc
+spec:
+  ports:
+    - port: 8080
+      name: http
+      protocol: TCP
+  selector:
+    app: cas-app
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cas-deployment-ingress
+  namespace: juanji
+spec:
+  ingressClassName: nginx
+  tls:
+    - secretName: juanji-cas-cert
+      hosts:
+        - cas.juanji.tech
+    - secretName: juanji-cas-mjclouds-cert
+      hosts:
+        - cas.mjclouds.com
+  rules:
+    - host: cas.juanji.tech
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cas-svc
+                port:
+                  number: 8080
+    - host: cas.mjclouds.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cas-svc
+                port:
+                  number: 8080
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: juanji-cas-tls
+  namespace: juanji
+spec:
+  # The secretName will store certificate content
+  secretName: juanji-cas-cert
+  dnsNames:
+    # Replace to your real DNS name
+    - cas.juanji.tech
+  issuerRef:
+    name: letsencrypt-clourflare
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: juanji-cas-mjclouds-tls
+  namespace: juanji
+spec:
+  # The secretName will store certificate content
+  secretName: juanji-cas-mjclouds-cert
+  dnsNames:
+    # Replace to your real DNS name
+    - cas.mjclouds.com
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+---

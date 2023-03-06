@@ -1,0 +1,13 @@
+package router
+
+import (
+	"github.com/flamego/flamego"
+)
+
+func App{{.appNameExport}}Init(e *flamego.Flame) {
+	e.Group("/api/v1/{{.appName}}", func() {
+		{{.appNameExport}}Group(e)
+	})
+}
+
+func {{.appNameExport}}Group(e *flamego.Flame) {}

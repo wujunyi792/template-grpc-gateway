@@ -1,0 +1,6 @@
+*.exe
+*.log
+.idea
+*test.go
+config/config.yaml
+scripts/k8s/config/*

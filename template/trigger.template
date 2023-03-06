@@ -1,0 +1,7 @@
+package routerInitialize
+
+import {{.appName}} "pinnacle-primary-be/internal/app/{{.appName}}/router"
+
+func init() {
+	routers = append(routers, {{.appName}}.App{{.appNameExport}}Init)
+}

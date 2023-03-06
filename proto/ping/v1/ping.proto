@@ -1,0 +1,34 @@
+syntax = "proto3";
+package ping.v1;
+option go_package = "/gen/proto/ping/v1;pingV1";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+message PingRequest {
+  string value = 1;
+}
+
+message PingResponse {
+  string value = 1;
+}
+
+message ABitOfEverything {}
+
+service PingService {
+    rpc Ping(PingRequest) returns (PingResponse) {
+      option (google.api.http) = {
+        get: "/ping/v1"
+      };
+    }
+  rpc PingErr(ABitOfEverything) returns (google.protobuf.Empty) {
+      option (google.api.http) = {
+        get: "/ping/v1/err"
+      };
+    }
+    rpc PingAuth(google.protobuf.Empty) returns (google.protobuf.Empty) {
+      option (google.api.http) = {
+        get: "/ping/v1/auth"
+      };
+    }
+}

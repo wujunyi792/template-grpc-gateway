@@ -1,0 +1,69 @@
+package dto
+
+import (
+	"errors"
+	"gorm.io/gorm"
+	"pinnacle-primary-be/internal/app/{{.appName}}/model"
+	"pinnacle-primary-be/internal/database"
+)
+
+func init() {
+	// 就近原则 那里要用 哪里就马上初始化
+	_ = database.AutoMigrate("*", &model.{{.appNameExport}}{})
+}
+
+var {{.appNameExport}} *{{.appName}}
+
+type {{.appName}} struct{}
+
+func (*{{.appName}}) Count() (count int64) {
+	database.GetDB("*").Model(&model.{{.appNameExport}}{}).Count(&count)
+	return
+}
+
+func (*{{.appName}}) Save(data *model.{{.appNameExport}}, tx ...*gorm.DB) error {
+	if len(tx) != 0 {
+		return tx[0].Save(data).Error
+	}
+	return database.GetDB("*").Save(data).Error
+}
+
+func (*{{.appName}}) Find(where *model.{{.appNameExport}}) ([]*model.{{.appNameExport}}, error) {
+	list := make([]*model.{{.appNameExport}}, 0, 10)
+	err := database.GetDB("*").Where(where).Find(&list).Error
+	return list, err
+}
+
+func (*{{.appName}}) Update(data *model.{{.appNameExport}}, tx ...*gorm.DB) error {
+	var result *gorm.DB
+	if len(tx) != 0 {
+		result = tx[0].Model(data).Updates(data)
+	} else {
+		result = database.GetDB("*").Model(data).Updates(data)
+	}
+	if result.Error != nil {
+		return result.Error
+	} else if result.RowsAffected != 1 {
+		return errors.New("update locked by optimistic lock")
+	}
+	return nil
+}
+
+func (*{{.appName}}) Del(data *model.{{.appNameExport}}, tx ...*gorm.DB) error {
+	if len(tx) != 0 {
+		return tx[0].Where(data).Delete(&model.{{.appNameExport}}{}).Error
+	}
+	return database.GetDB("*").Where(data).Delete(&model.{{.appNameExport}}{}).Error
+}
+
+func (*{{.appName}}) GetByID(sid uint) (s *model.{{.appNameExport}}, err error) {
+	s = &model.{{.appNameExport}}{}
+	err = database.GetDB("*").Where("id = ?", sid).First(s).Error
+	return
+}
+
+func (*{{.appName}}) Gets(offset, limit int) ([]*model.{{.appNameExport}}, error) {
+	var entities []*model.{{.appNameExport}}
+	err := database.GetDB("*").Model(&model.{{.appNameExport}}{}).Offset(offset).Limit(limit).Find(&entities).Error
+	return users, err
+}
